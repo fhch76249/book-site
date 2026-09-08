@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>کتابخانه | کتاب‌های آنلاین</title>
+<meta name="description" content="کتابخانه آنلاین برای مطالعه کتاب‌های مختلف">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="header">
+  <div class="container nav">
+    <a href="index.html" class="logo">📚 کتابخانه</a>
+    <nav class="menu">
+      <a href="#home">خانه</a><a href="#books">کتاب‌ها</a>
+      <a href="#categories">دسته‌بندی</a><a href="#popular">محبوب‌ترین‌ها</a>
+    </nav>
+    <button class="dark-btn" onclick="toggleDarkMode()" aria-label="حالت تاریک">🌙</button>
+  </div>
+</header>
+
+<main id="home">
+<section class="hero">
+  <div class="container hero-content">
+    <div class="hero-text">
+      <span class="badge">📖 کتابخانه آنلاین</span>
+      <h1>دنیایی از کتاب‌ها <span>همیشه همراه تو</span></h1>
+      <p>کتاب مورد علاقه‌ات را پیدا کن، آنلاین مطالعه کن و به دنیای داستان‌ها و دانش قدم بگذار.</p>
+      <div class="hero-search">
+        <input id="searchInput" type="text" placeholder="نام کتاب یا نویسنده را جستجو کنید..." onkeyup="searchBooks()">
+        <button onclick="searchBooks()">🔍 جستجو</button>
+      </div>
+    </div>
+    <div class="hero-book"><div class="book-3d"><div class="book-cover">
+      <div class="cover-icon">📚</div><h3>کتابخانه</h3><p>دنیایی برای خواندن</p>
+    </div></div></div>
+  </div>
+</section>
+
+<section class="section" id="categories">
+<div class="container">
+  <div class="section-title"><div><span>دسته‌بندی</span><h2>موضوع مورد علاقه‌ات را انتخاب کن</h2></div></div>
+  <div class="categories">
+    <button onclick="filterCategory('رمان')">❤️<strong>رمان</strong><small>داستان و عاشقانه</small></button>
+    <button onclick="filterCategory('جنایی')">🕵️<strong>جنایی</strong><small>معمایی و هیجانی</small></button>
+    <button onclick="filterCategory('علمی')">🧠<strong>علمی</strong><small>دانش و فناوری</small></button>
+    <button onclick="filterCategory('تاریخی')">🏛️<strong>تاریخی</strong><small>تاریخ و تمدن</small></button>
+    <button onclick="filterCategory('روانشناسی')">🧘<strong>روانشناسی</strong><small>ذهن و زندگی</small></button>
+    <button onclick="filterCategory('آموزشی')">🎓<strong>آموزشی</strong><small>یادگیری مهارت</small></button>
+  </div>
+</div>
+</section>
+
+<section class="section books-section" id="books">
+<div class="container">
+  <div class="section-title">
+    <div><span>کتاب‌ها</span><h2>جدیدترین کتاب‌ها</h2></div>
+    <button class="view-all" onclick="showAllBooks()">مشاهده همه ←</button>
+  </div>
+  <div id="booksGrid" class="books-grid">
+    <article class="book-card" data-title="کتاب نمونه" data-author="نویسنده نمونه" data-category="رمان">
+      <div class="book-image"><div class="fake-cover">📖</div><span class="book-category">رمان</span></div>
+      <div class="book-info"><h3>کتاب نمونه</h3><p>نویسنده نمونه</p><div class="book-bottom"><span>⭐ 4.8</span><a href="book.html">مطالعه →</a></div></div>
+    </article>
+    <article class="book-card" data-title="داستان زندگی" data-author="نویسنده دوم" data-category="روانشناسی">
+      <div class="book-image"><div class="fake-cover">🧠</div><span class="book-category">روانشناسی</span></div>
+      <div class="book-info"><h3>داستان زندگی</h3><p>نویسنده دوم</p><div class="book-bottom"><span>⭐ 4.7</span><a href="book.html">مطالعه →</a></div></div>
+    </article>
+    <article class="book-card" data-title="راز بزرگ" data-author="نویسنده سوم" data-category="جنایی">
+      <div class="book-image"><div class="fake-cover">🕵️</div><span class="book-category">جنایی</span></div>
+      <div class="book-info"><h3>راز بزرگ</h3><p>نویسنده سوم</p><div class="book-bottom"><span>⭐ 4.9</span><a href="book.html">مطالعه →</a></div></div>
+    </article>
+    <article class="book-card" data-title="دانش آینده" data-author="نویسنده چهارم" data-category="علمی">
+      <div class="book-image"><div class="fake-cover">🔬</div><span class="book-category">علمی</span></div>
+      <div class="book-info"><h3>دانش آینده</h3><p>نویسنده چهارم</p><div class="book-bottom"><span>⭐ 4.6</span><a href="book.html">مطالعه →</a></div></div>
+    </article>
+  </div>
+  <div id="noResults" class="no-results">کتابی پیدا نشد.</div>
+</div>
+</section>
+
+<section class="container"><div class="ad-box"><span>تبلیغات</span><p>فضای تبلیغاتی سایت</p></div></section>
+
+<section class="section" id="popular"><div class="container"><div class="popular-box">
+  <div><span>⭐ محبوب کاربران</span><h2>کتاب‌های مورد علاقه کاربران را پیدا کن</h2><p>به‌زودی محبوب‌ترین کتاب‌های سایت بر اساس تعداد مطالعه و امتیاز کاربران نمایش داده می‌شوند.</p></div>
+  <div class="popular-icon">📚</div>
+</div></div></section>
+</main>
+
+<footer class="footer"><div class="container footer-content">
+  <div><h3>📚 کتابخانه</h3><p>یک کتابخانه آنلاین ساده، سریع و زیبا.</p></div>
+  <div><h4>دسترسی سریع</h4><a href="#home">خانه</a><a href="#books">کتاب‌ها</a><a href="#categories">دسته‌بندی‌ها</a></div>
+  <div><h4>مدیریت</h4><a href="login.html">ورود مدیر</a></div>
+</div><div class="copyright">© 2026 کتابخانه آنلاین</div></footer>
+<script src="app.js"></script>
+</body>
+</html>

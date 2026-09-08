@@ -1,0 +1,5 @@
+function toggleDarkMode(){document.body.classList.toggle("dark");localStorage.setItem("darkMode",document.body.classList.contains("dark"))}
+window.addEventListener("DOMContentLoaded",()=>{if(localStorage.getItem("darkMode")==="true")document.body.classList.add("dark")});
+function searchBooks(){const input=document.getElementById("searchInput").value.trim().toLowerCase(),books=document.querySelectorAll(".book-card");let found=0;books.forEach(book=>{const text=(book.dataset.title+" "+book.dataset.author+" "+book.dataset.category).toLowerCase();if(text.includes(input)){book.style.display="";found++}else book.style.display="none"});document.getElementById("noResults").style.display=found===0?"block":"none"}
+function filterCategory(category){document.getElementById("searchInput").value=category;searchBooks();document.getElementById("books").scrollIntoView({behavior:"smooth"})}
+function showAllBooks(){document.getElementById("searchInput").value="";document.querySelectorAll(".book-card").forEach(b=>b.style.display="");document.getElementById("noResults").style.display="none"}
