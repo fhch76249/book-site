@@ -1,385 +1,316 @@
-const SUPABASE_URL="https://pophcxrfrooqluwrujbl.supabase.co";
-const SUPABASE_KEY="sb_publishable_cmZlKwLESb-jIWkkQAC7yg_KxNdkJfn";
+const SUPABASE_URL =
+  "https://pophcxrfrooqluwrujbl.supabase.co";
 
-const db=supabase.createClient(
+const SUPABASE_KEY =
+  "sb_publishable_cmZlKwLESb-jIWkkQAC7yg_KxNdkJfn";
+
+const db = supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
 
-const $=id=>document.getElementById(id);
 
+// =========================
+// ابزارهای عمومی
+// =========================
 
-/* =========================
-   پیام‌ها
-========================= */
+function $(id) {
+  return document.getElementById(id);
+}
 
-function showMsg(text,type="ok"){
-  const box=$("msg");
-  if(!box)return;
-
-  box.textContent=text;
-  box.className="msg "+type;
-  box.style.display="block";
+function esc(value) {
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    function (char) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char];
+    }
+  );
 }
 
 
-/* =========================
-   ورود مدیر
-========================= */
+// =========================
+// پیام
+// =========================
 
-async function requireLogin(){
+function showMsg(text, type = "ok") {
+
+  const msg = $("msg");
+
+  if (!msg) return;
+
+  msg.textContent = text;
+
+  msg.className = "msg " + type;
+
+  msg.style.display = "block";
+
+  setTimeout(() => {
+    msg.style.display = "none";
+  }, 4000);
+}
+
+
+// =========================
+// بررسی ورود مدیر
+// =========================
+
+async function requireLogin() {
 
   const {
-    data:{session}
-  }=await db.auth.getSession();
+    data: {
+      user
+    }
+  } = await db.auth.getUser();
 
-  if(!session){
-    location.href="login.html";
+  if (!user) {
+
+    location.href = "login.html";
+
     return null;
   }
 
-  if($("adminEmail")){
-    $("adminEmail").textContent=
-      "وارد شده با: "+
-      (session.user.email||"");
+  if ($("adminEmail")) {
+    $("adminEmail").textContent =
+      user.email || "مدیر";
   }
 
-  return session;
+  return user;
 }
 
 
-async function login(){
+// =========================
+// خروج
+// =========================
 
-  const email=$("email").value.trim();
-  const password=$("password").value;
-
-  const {error}=await db.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if(error){
-    showMsg(
-      "ورود ناموفق: "+error.message,
-      "error"
-    );
-    return;
-  }
-
-  location.href="admin.html";
-}
-
-
-async function logout(){
+async function logout() {
 
   await db.auth.signOut();
 
-  location.href="login.html";
+  location.href = "login.html";
 }
 
 
-/* =========================
-   آپلود فایل
-========================= */
+// =========================
+// آپلود فایل
+// =========================
 
-async function uploadFile(bucket,file){
+async function uploadFile(
+  file,
+  bucket,
+  folder = ""
+) {
 
-  if(!file)return null;
+  if (!file) return null;
 
-  const ext=file.name.includes(".")
-    ?file.name.split(".").pop()
-    :"bin";
+  const safeName =
+    file.name
+      .replace(/[^a-zA-Z0-9._-]/g, "_");
 
-  const path=
-    Date.now()+
-    "-"+
-    Math.random().toString(36).slice(2)+
-    "."+
-    ext.replace(
-      /[^a-zA-Z0-9]/g,
-      ""
-    );
+  const fileName =
+    Date.now() +
+    "_" +
+    Math.random()
+      .toString(36)
+      .substring(2, 8) +
+    "_" +
+    safeName;
 
-  const {error}=await db
-    .storage
+  const path =
+    folder
+      ? folder + "/" + fileName
+      : fileName;
+
+
+  const {
+    error
+  } = await db.storage
     .from(bucket)
     .upload(
       path,
       file,
       {
-        upsert:false,
-        contentType:file.type||undefined
+        cacheControl: "3600",
+        upsert: false
       }
     );
 
-  if(error){
+
+  if (error) {
+
+    console.error(error);
+
     throw new Error(
-      "خطا در آپلود فایل: "+
+      "خطا در آپلود فایل: " +
       error.message
     );
   }
 
-  return db
-    .storage
+
+  const {
+    data
+  } = db.storage
     .from(bucket)
-    .getPublicUrl(path)
-    .data
-    .publicUrl;
+    .getPublicUrl(path);
+
+
+  return data.publicUrl;
 }
 
 
-/* =========================
-   ایمن‌سازی متن
-========================= */
+// =========================
+// دریافت کتاب‌ها
+// =========================
 
-function esc(v){
+async function loadAdminBooks() {
 
-  return String(v??"")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
+  const list = $("booksList");
 
+  if (!list) return;
 
-/* =========================
-   نمایش کتاب‌های پنل
-========================= */
+  list.innerHTML =
+    "در حال بارگذاری...";
 
-async function loadAdminBooks(){
-
-  const list=$("booksList");
-
-  if(!list)return;
 
   const {
     data,
     error
-  }=await db
+  } = await db
     .from("books")
     .select("*")
     .order(
       "created_at",
-      {ascending:false}
+      {
+        ascending: false
+      }
     );
 
-  if(error){
 
-    list.innerHTML=
-      "<p>خطا: "+
-      esc(error.message)+
-      "</p>";
+  if (error) {
 
-    return;
-  }
+    console.error(error);
 
-  if(!data||!data.length){
-
-    list.innerHTML=
-      "<p>هنوز کتابی اضافه نشده است.</p>";
+    list.innerHTML =
+      "خطا در دریافت کتاب‌ها.";
 
     return;
   }
 
-  list.innerHTML=data.map(b=>`
 
-    <div class="book-row">
+  if (!data || !data.length) {
 
-      ${
-        b.cover_url
-        ?
-        `<img
-          class="thumb"
-          src="${esc(b.cover_url)}"
-          alt=""
-        >`
-        :
-        `<div class="thumb">
-          📚
-        </div>`
-      }
+    list.innerHTML =
+      "هنوز کتابی اضافه نشده است.";
 
-      <div>
-
-        <h3>
-          ${esc(b.title||"بدون عنوان")}
-        </h3>
-
-        <p>
-          نویسنده:
-          ${esc(b.author||"—")}
-        </p>
-
-        <p>
-          دسته:
-          ${esc(b.category||"—")}
-          |
-          امتیاز:
-          ${b.rating??"—"}
-        </p>
-
-      </div>
-
-      <div class="row-actions actions">
-
-        <button
-          class="primary edit-btn"
-          data-id="${b.id}"
-        >
-          ویرایش
-        </button>
-
-        <button
-          class="danger delete-btn"
-          data-id="${b.id}"
-        >
-          حذف
-        </button>
-
-      </div>
-
-    </div>
-
-  `).join("");
-
-
-  document
-    .querySelectorAll(".edit-btn")
-    .forEach(x=>{
-
-      x.onclick=()=>startEdit(
-        x.dataset.id,
-        data
-      );
-
-    });
-
-
-  document
-    .querySelectorAll(".delete-btn")
-    .forEach(x=>{
-
-      x.onclick=()=>deleteBook(
-        x.dataset.id
-      );
-
-    });
-
-}
-
-
-/* =========================
-   ویرایش کتاب
-========================= */
-
-function startEdit(id,books){
-
-  const b=books.find(
-    x=>x.id===id
-  );
-
-  if(!b)return;
-
-  $("bookId").value=b.id;
-
-  $("title").value=
-    b.title||"";
-
-  $("author").value=
-    b.author||"";
-
-  $("category").value=
-    b.category||"";
-
-  $("rating").value=
-    b.rating??"";
-
-  $("description").value=
-    b.description||"";
-
-  $("formTitle").textContent=
-    "✏️ ویرایش کتاب";
-
-  $("saveBtn").textContent=
-    "ذخیره تغییرات";
-
-  $("cancelEdit").style.display=
-    "inline-block";
-
-  scrollTo({
-    top:0,
-    behavior:"smooth"
-  });
-}
-
-
-/* =========================
-   پاک کردن فرم
-========================= */
-
-function resetForm(){
-
-  $("bookForm").reset();
-
-  $("bookId").value="";
-
-  $("formTitle").textContent=
-    "➕ افزودن کتاب";
-
-  $("saveBtn").textContent=
-    "ذخیره کتاب";
-
-  $("cancelEdit").style.display=
-    "none";
-}
-
-
-/* =========================
-   ذخیره کتاب
-========================= */
-
-async function saveBook(e){
-
-  e.preventDefault();
-
-  if(!await requireLogin())
     return;
-
-  const id=
-    $("bookId").value;
-
-  const title=
-    $("title").value.trim();
-
-  const author=
-    $("author").value.trim();
-
-  const category=
-    $("category").value.trim();
-
-  const description=
-    $("description").value.trim();
-
-  const rv=
-    $("rating").value.trim();
-
-  const rating=
-    rv===""?
-    null:
-    Number(rv);
-
-  const cover=
-    $("cover").files[0];
-
-  const pdf=
-    $("pdf").files[0];
+  }
 
 
-  if(!title){
+  list.innerHTML =
+    data.map(book => {
+
+      const cover =
+        book.cover_url || "";
+
+
+      return `
+        <div class="book-row">
+
+          ${
+            cover
+              ? `
+                <img
+                  class="thumb"
+                  src="${esc(cover)}"
+                  alt="${esc(book.title)}"
+                >
+              `
+              : `
+                <div class="thumb">
+                  📚
+                </div>
+              `
+          }
+
+
+          <div>
+
+            <h3>
+              ${esc(book.title)}
+            </h3>
+
+            <p>
+              نویسنده:
+              ${esc(book.author || "نامشخص")}
+            </p>
+
+            <p>
+              دسته:
+              ${esc(book.category || "بدون دسته")}
+            </p>
+
+            <p>
+              امتیاز:
+              ${
+                book.rating != null
+                  ? "★ " + esc(book.rating)
+                  : "-"
+              }
+            </p>
+
+          </div>
+
+
+          <div class="row-actions">
+
+            <button
+              class="primary"
+              onclick="startEdit('${book.id}')"
+            >
+              ویرایش
+            </button>
+
+            <button
+              class="danger"
+              onclick="deleteBook('${book.id}')"
+            >
+              حذف
+            </button>
+
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
+}
+
+
+// =========================
+// ویرایش کتاب
+// =========================
+
+async function startEdit(id) {
+
+  const {
+    data: book,
+    error
+  } = await db
+    .from("books")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+
+  if (error || !book) {
 
     showMsg(
-      "عنوان کتاب را وارد کن.",
+      "کتاب پیدا نشد.",
       "error"
     );
 
@@ -387,117 +318,328 @@ async function saveBook(e){
   }
 
 
-  $("saveBtn").disabled=true;
+  $("bookId").value =
+    book.id;
 
-  showMsg(
-    "در حال ذخیره و آپلود فایل‌ها..."
-  );
+  $("title").value =
+    book.title || "";
 
+  $("author").value =
+    book.author || "";
 
-  try{
+  $("category").value =
+    book.category || "";
 
-    const coverUrl=
-      await uploadFile(
-        "covers",
-        cover
-      );
+  $("rating").value =
+    book.rating ?? "";
 
-    const pdfUrl=
-      await uploadFile(
-        "books",
-        pdf
-      );
+  $("description").value =
+    book.description || "";
 
 
-    const payload={
-      title,
-      author,
-      category,
-      description,
-      rating
-    };
+  $("formTitle").textContent =
+    "✏️ ویرایش کتاب";
 
 
-    if(coverUrl)
-      payload.cover_url=coverUrl;
-
-    if(pdfUrl)
-      payload.pdf_url=pdfUrl;
+  $("saveBtn").textContent =
+    "ذخیره تغییرات";
 
 
-    const result=id
-
-      ?
-
-      await db
-        .from("books")
-        .update(payload)
-        .eq("id",id)
-
-      :
-
-      await db
-        .from("books")
-        .insert(payload);
+  $("cancelEdit").style.display =
+    "inline-block";
 
 
-    if(result.error)
-      throw result.error;
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
 
+
+// =========================
+// لغو ویرایش
+// =========================
+
+function resetForm() {
+
+  const form = $("bookForm");
+
+  if (form) {
+    form.reset();
+  }
+
+
+  $("bookId").value =
+    "";
+
+
+  $("formTitle").textContent =
+    "➕ افزودن کتاب";
+
+
+  $("saveBtn").textContent =
+    "ذخیره کتاب";
+
+
+  $("cancelEdit").style.display =
+    "none";
+}
+
+
+// =========================
+// ذخیره کتاب
+// =========================
+
+async function saveBook(event) {
+
+  event.preventDefault();
+
+
+  const id =
+    $("bookId").value.trim();
+
+
+  const title =
+    $("title").value.trim();
+
+
+  const author =
+    $("author").value.trim();
+
+
+  const category =
+    $("category").value.trim();
+
+
+  const description =
+    $("description").value.trim();
+
+
+  const ratingValue =
+    $("rating").value.trim();
+
+
+  const rating =
+    ratingValue === ""
+      ? null
+      : Number(ratingValue);
+
+
+  const coverFile =
+    $("cover").files[0];
+
+
+  const pdfFile =
+    $("pdf").files[0];
+
+
+  if (!title) {
 
     showMsg(
-      id
-      ?
-      "کتاب ویرایش شد."
-      :
-      "کتاب با موفقیت اضافه شد."
+      "عنوان کتاب را وارد کنید.",
+      "error"
     );
+
+    return;
+  }
+
+
+  const saveBtn =
+    $("saveBtn");
+
+
+  saveBtn.disabled = true;
+
+  saveBtn.textContent =
+    "در حال ذخیره...";
+
+
+  try {
+
+    let coverUrl = null;
+
+    let pdfUrl = null;
+
+
+    // =====================
+    // آپلود جلد
+    // =====================
+
+    if (coverFile) {
+
+      coverUrl =
+        await uploadFile(
+          coverFile,
+          "covers"
+        );
+    }
+
+
+    // =====================
+    // آپلود PDF
+    // =====================
+
+    if (pdfFile) {
+
+      pdfUrl =
+        await uploadFile(
+          pdfFile,
+          "books"
+        );
+    }
+
+
+    // =====================
+    // ویرایش
+    // =====================
+
+    if (id) {
+
+      const updateData = {
+
+        title,
+        author,
+        category,
+        description,
+        rating
+
+      };
+
+
+      if (coverUrl) {
+        updateData.cover_url =
+          coverUrl;
+      }
+
+
+      if (pdfUrl) {
+        updateData.pdf_url =
+          pdfUrl;
+      }
+
+
+      const {
+        error
+      } = await db
+        .from("books")
+        .update(updateData)
+        .eq("id", id);
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      showMsg(
+        "کتاب با موفقیت ویرایش شد."
+      );
+
+    }
+
+
+    // =====================
+    // کتاب جدید
+    // =====================
+
+    else {
+
+      const {
+        error
+      } = await db
+        .from("books")
+        .insert({
+
+          title,
+          author,
+          category,
+          description,
+          rating,
+          cover_url: coverUrl,
+          pdf_url: pdfUrl
+
+        });
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      showMsg(
+        "کتاب با موفقیت اضافه شد."
+      );
+    }
 
 
     resetForm();
 
     await loadAdminBooks();
 
+    await loadViewStats();
 
-  }catch(err){
+    await loadWeeklyViews();
+
+
+  } catch (error) {
+
+    console.error(error);
 
     showMsg(
-      err.message||
-      "خطای ناشناخته",
+      error.message ||
+      "خطایی رخ داد.",
       "error"
     );
 
-  }finally{
+  } finally {
 
-    $("saveBtn").disabled=false;
+    saveBtn.disabled =
+      false;
+
+    if ($("bookId").value) {
+
+      saveBtn.textContent =
+        "ذخیره تغییرات";
+
+    } else {
+
+      saveBtn.textContent =
+        "ذخیره کتاب";
+    }
 
   }
-
 }
 
 
-/* =========================
-   حذف کتاب
-========================= */
+// =========================
+// حذف کتاب
+// =========================
 
-async function deleteBook(id){
+async function deleteBook(id) {
 
-  if(!confirm(
-    "این کتاب حذف شود؟"
-  ))
-    return;
+  const confirmed =
+    confirm(
+      "آیا از حذف این کتاب مطمئن هستید؟"
+    );
 
 
-  const {error}=await db
+  if (!confirmed) return;
+
+
+  const {
+    error
+  } = await db
     .from("books")
     .delete()
-    .eq("id",id);
+    .eq("id", id);
 
 
-  if(error){
+  if (error) {
+
+    console.error(error);
 
     showMsg(
-      "حذف ناموفق: "+
+      "خطا در حذف کتاب: " +
       error.message,
       "error"
     );
@@ -507,287 +649,543 @@ async function deleteBook(id){
 
 
   showMsg(
-    "کتاب حذف شد."
+    "کتاب با موفقیت حذف شد."
   );
 
 
   await loadAdminBooks();
+
+  await loadViewStats();
+
+  await loadWeeklyViews();
 }
 
 
-/* =========================
-   آمار بازدید
-========================= */
+// =========================
+// آمار بازدید
+// =========================
 
-async function loadViewStats(){
+async function loadViewStats() {
 
-  const todayViews=
+  const todayElement =
     $("todayViews");
 
-  const totalViews=
+  const totalElement =
     $("totalViews");
 
-  const popularViews=
-    $("popularViews");
 
-
-  /*
-    اگر این عناصر در صفحه نبودند،
-    تابع کاری انجام نمی‌دهد.
-  */
-
-  if(
-    !todayViews||
-    !totalViews||
-    !popularViews
-  ){
-    return;
-  }
-
-
-  /* -------------------------
-     کل بازدیدها
-  ------------------------- */
+  // =====================
+  // کل بازدیدها
+  // =====================
 
   const {
-    count:total,
-    error:totalError
-  }=await db
+    count: totalCount,
+    error: totalError
+  } = await db
     .from("page_views")
-    .select("*",{
-      count:"exact",
-      head:true
-    });
+    .select(
+      "*",
+      {
+        count: "exact",
+        head: true
+      }
+    );
 
 
-  if(totalError){
+  if (totalError) {
 
-    console.log(
+    console.error(
       "Total views error:",
       totalError
     );
 
-    totalViews.textContent=
-      "خطا";
+  } else if (totalElement) {
 
-  }else{
-
-    totalViews.textContent=
-      total||0;
-
+    totalElement.textContent =
+      totalCount || 0;
   }
 
 
-  /* -------------------------
-     شروع امروز
-  ------------------------- */
+  // =====================
+  // شروع امروز
+  // =====================
 
-  const now=new Date();
+  const start =
+    new Date();
 
-  const startOfToday=
-    new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate()
-    );
-
-
-  /* -------------------------
-     بازدیدهای امروز
-  ------------------------- */
-
-  const {
-    data:views,
-    error:viewsError
-  }=await db
-    .from("page_views")
-    .select(
-      "book_id,created_at"
-    )
-    .gte(
-      "created_at",
-      startOfToday.toISOString()
-    );
-
-
-  if(viewsError){
-
-    console.log(
-      "Today views error:",
-      viewsError
-    );
-
-    todayViews.textContent=
-      "خطا";
-
-    popularViews.innerHTML=
-      "<p>خطا در دریافت آمار.</p>";
-
-    return;
-  }
-
-
-  const todayData=
-    views||[];
-
-
-  todayViews.textContent=
-    todayData.length;
-
-
-  /* -------------------------
-     شمارش کتاب‌ها
-  ------------------------- */
-
-  const counts={};
-
-
-  todayData.forEach(view=>{
-
-    if(!view.book_id)
-      return;
-
-    counts[view.book_id]=
-      (counts[view.book_id]||0)+1;
-
-  });
-
-
-  const ids=
-    Object.keys(counts);
-
-
-  if(!ids.length){
-
-    popularViews.innerHTML=
-      "<p>امروز هنوز بازدیدی ثبت نشده است.</p>";
-
-    return;
-  }
-
-
-  /* -------------------------
-     گرفتن نام کتاب‌ها
-  ------------------------- */
-
-  const {
-    data:books,
-    error:booksError
-  }=await db
-    .from("books")
-    .select("id,title")
-    .in("id",ids);
-
-
-  if(booksError){
-
-    console.log(
-      "Books stats error:",
-      booksError
-    );
-
-    popularViews.innerHTML=
-      "<p>خطا در دریافت کتاب‌ها.</p>";
-
-    return;
-  }
-
-
-  /* -------------------------
-     مرتب‌سازی
-  ------------------------- */
-
-  books.sort(
-    (a,b)=>
-      (counts[b.id]||0)-
-      (counts[a.id]||0)
+  start.setHours(
+    0,
+    0,
+    0,
+    0
   );
 
 
-  /* -------------------------
-     نمایش
-  ------------------------- */
+  // =====================
+  // بازدیدهای امروز
+  // =====================
 
-  popularViews.innerHTML=
-    books.map(
-      (book,index)=>`
+  const {
+    data: todayData,
+    error: todayError
+  } = await db
+    .from("page_views")
+    .select(
+      "book_id,page,created_at"
+    )
+    .gte(
+      "created_at",
+      start.toISOString()
+    );
 
-        <div class="view-row">
 
-          <span>
-            ${index+1}
-          </span>
+  if (todayError) {
 
-          <b>
-            ${esc(
-              book.title||
-              "بدون عنوان"
-            )}
-          </b>
+    console.error(
+      "Today views error:",
+      todayError
+    );
 
-          <strong>
-            ${counts[book.id]||0}
-            بازدید
-          </strong>
+    return;
+  }
 
-        </div>
 
+  const today =
+    todayData || [];
+
+
+  // =====================
+  // تعداد کل امروز
+  // =====================
+
+  if (todayElement) {
+
+    todayElement.textContent =
+      today.length;
+  }
+
+
+  // =====================
+  // صفحه اصلی
+  // =====================
+
+  const homeCount =
+    today.filter(
+      view =>
+        view.page === "home"
+    ).length;
+
+
+  if ($("homeViews")) {
+
+    $("homeViews").textContent =
+      homeCount;
+  }
+
+
+  // =====================
+  // صفحات کتاب
+  // =====================
+
+  const bookCount =
+    today.filter(
+      view =>
+        view.page === "book"
+    ).length;
+
+
+  if ($("bookViews")) {
+
+    $("bookViews").textContent =
+      bookCount;
+  }
+
+
+  // =====================
+  // پربازدیدترین کتاب‌ها
+  // =====================
+
+  const bookViews =
+    today.filter(
+      view =>
+        view.page === "book" &&
+        view.book_id
+    );
+
+
+  const counts = {};
+
+
+  bookViews.forEach(
+    view => {
+
+      if (!counts[view.book_id]) {
+        counts[view.book_id] = 0;
+      }
+
+      counts[view.book_id]++;
+    }
+  );
+
+
+  const ids =
+    Object.keys(counts);
+
+
+  const popularElement =
+    $("popularViews");
+
+
+  if (!popularElement) return;
+
+
+  if (!ids.length) {
+
+    popularElement.innerHTML =
       `
-    ).join("");
+        <div class="chart-empty">
+          امروز هنوز بازدیدی برای کتاب‌ها ثبت نشده است.
+        </div>
+      `;
 
+    return;
+  }
+
+
+  // =====================
+  // دریافت عنوان کتاب‌ها
+  // =====================
+
+  const {
+    data: booksData,
+    error: booksError
+  } = await db
+    .from("books")
+    .select(
+      "id,title,cover_url"
+    )
+    .in(
+      "id",
+      ids
+    );
+
+
+  if (booksError) {
+
+    console.error(
+      booksError
+    );
+
+    return;
+  }
+
+
+  const booksMap = {};
+
+
+  (booksData || []).forEach(
+    book => {
+
+      booksMap[book.id] =
+        book;
+    }
+  );
+
+
+  const sorted =
+    ids.sort(
+      (a, b) =>
+        counts[b] -
+        counts[a]
+    );
+
+
+  popularElement.innerHTML =
+    sorted
+      .slice(0, 10)
+      .map(
+        (id, index) => {
+
+          const book =
+            booksMap[id];
+
+
+          if (!book) {
+            return "";
+          }
+
+
+          return `
+            <div class="view-row">
+
+              <strong>
+                #${index + 1}
+              </strong>
+
+              <span>
+                ${esc(book.title)}
+              </span>
+
+              <b>
+                ${counts[id]} بازدید
+              </b>
+
+            </div>
+          `;
+
+        }
+      )
+      .join("");
 }
 
 
-/* =========================
-   شروع پنل
-========================= */
+// =========================
+// نمودار ۷ روز اخیر
+// =========================
+
+async function loadWeeklyViews() {
+
+  const chart =
+    $("viewsChart");
+
+
+  if (!chart) return;
+
+
+  const start =
+    new Date();
+
+
+  start.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  start.setDate(
+    start.getDate() - 6
+  );
+
+
+  const {
+    data,
+    error
+  } = await db
+    .from("page_views")
+    .select(
+      "created_at"
+    )
+    .gte(
+      "created_at",
+      start.toISOString()
+    );
+
+
+  if (error) {
+
+    console.error(
+      "Weekly views error:",
+      error
+    );
+
+
+    chart.innerHTML =
+      `
+        <div class="chart-empty">
+          خطا در دریافت نمودار
+        </div>
+      `;
+
+    return;
+  }
+
+
+  const days = [];
+
+
+  for (
+    let i = 0;
+    i < 7;
+    i++
+  ) {
+
+    const date =
+      new Date(start);
+
+
+    date.setDate(
+      start.getDate() + i
+    );
+
+
+    days.push({
+      date,
+      count: 0
+    });
+
+  }
+
+
+  (data || []).forEach(
+    view => {
+
+      const date =
+        new Date(
+          view.created_at
+        );
+
+
+      date.setHours(
+        0,
+        0,
+        0,
+        0
+      );
+
+
+      const item =
+        days.find(
+          x =>
+            x.date.getTime() ===
+            date.getTime()
+        );
+
+
+      if (item) {
+        item.count++;
+      }
+
+    }
+  );
+
+
+  const max =
+    Math.max(
+      ...days.map(
+        x => x.count
+      ),
+      1
+    );
+
+
+  chart.innerHTML =
+    days.map(
+      item => {
+
+        const label =
+          item.date.toLocaleDateString(
+            "fa-IR",
+            {
+              month: "numeric",
+              day: "numeric"
+            }
+          );
+
+
+        const width =
+          Math.max(
+            3,
+            (
+              item.count /
+              max
+            ) * 100
+          );
+
+
+        return `
+          <div class="chart-row">
+
+            <span>
+              ${label}
+            </span>
+
+            <div>
+              <div
+                class="chart-bar"
+                style="width:${width}%"
+              ></div>
+            </div>
+
+            <b>
+              ${item.count}
+            </b>
+
+          </div>
+        `;
+
+      }
+    ).join("");
+}
+
+
+// =========================
+// شروع پنل
+// =========================
 
 document.addEventListener(
   "DOMContentLoaded",
-  async()=>{
+  async () => {
 
-    /* صفحه ورود */
+    const user =
+      await requireLogin();
 
-    if($("loginForm")){
 
-      $("loginForm").onsubmit=
-        e=>{
-          e.preventDefault();
-          login();
-        };
+    if (!user) return;
 
-      return;
+
+    // خروج
+    const logoutBtn =
+      $("logoutBtn");
+
+
+    if (logoutBtn) {
+
+      logoutBtn.addEventListener(
+        "click",
+        logout
+      );
+
+    }
+
+
+    // فرم کتاب
+    const form =
+      $("bookForm");
+
+
+    if (form) {
+
+      form.addEventListener(
+        "submit",
+        saveBook
+      );
+
     }
 
 
-    /* پنل مدیریت */
-
-    if($("bookForm")){
-
-      if(!await requireLogin())
-        return;
+    // لغو ویرایش
+    const cancelEdit =
+      $("cancelEdit");
 
 
-      $("bookForm").onsubmit=
-        saveBook;
+    if (cancelEdit) {
 
-
-      $("cancelEdit").onclick=
-        resetForm;
-
-
-      $("logoutBtn").onclick=
-        logout;
-
-
-      await loadAdminBooks();
-
-
-      /* آمار بازدید */
-
-      await loadViewStats();
+      cancelEdit.addEventListener(
+        "click",
+        resetForm
+      );
 
     }
+
+
+    // دریافت اطلاعات
+    await loadAdminBooks();
+
+    await loadViewStats();
+
+    await loadWeeklyViews();
 
   }
 );
