@@ -1,5 +1,4 @@
 const SUPABASE_URL = "https://pophcxrfrooqluwrujbl.supabase.co";
-
 const SUPABASE_KEY = "sb_publishable_cmZlKwLESb-jIWkkQAC7yg_KxNdkJfn";
 
 const db = supabase.createClient(
@@ -7,269 +6,222 @@ const db = supabase.createClient(
   SUPABASE_KEY
 );
 
-
-// ===============================
 // حالت تاریک
-// ===============================
+const themeBtn = document.querySelector(".theme-toggle");
 
-function toggleDarkMode() {
-  document.body.classList.toggle("dark");
+if (themeBtn) {
+  themeBtn.addEventListener("click", () => {
+    document.body.classList.toggle("dark");
 
-  localStorage.setItem(
-    "darkMode",
-    document.body.classList.contains("dark")
-  );
-}
-
-
-// ===============================
-// جستجوی کتاب
-// ===============================
-
-function searchBooks() {
-
-  const input = document.getElementById("searchInput");
-
-  if (!input) return;
-
-  const search = input.value.toLowerCase().trim();
-
-  document.querySelectorAll(".book-card").forEach(card => {
-
-    const text = card.innerText.toLowerCase();
-
-    card.style.display =
-      text.includes(search) ? "" : "none";
-
+    localStorage.setItem(
+      "theme",
+      document.body.classList.contains("dark") ? "dark" : "light"
+    );
   });
+}
 
+if (localStorage.getItem("theme") === "dark") {
+  document.body.classList.add("dark");
 }
 
 
-// ===============================
-// فیلتر دسته‌بندی
-// ===============================
+// فرار دادن متن برای جلوگیری از مشکل HTML
+function escapeHTML(text) {
+  if (!text) return "";
 
-function filterCategory(category) {
-
-  document.querySelectorAll(".book-card").forEach(card => {
-
-    const text = card.innerText.toLowerCase();
-
-    if (
-      category === "همه" ||
-      text.includes(category.toLowerCase())
-    ) {
-
-      card.style.display = "";
-
-    } else {
-
-      card.style.display = "none";
-
-    }
-
-  });
-
-  const books = document.getElementById("books");
-
-  if (books) {
-
-    books.scrollIntoView({
-      behavior: "smooth"
-    });
-
-  }
-
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 
-// ===============================
-// نمایش همه کتاب‌ها
-// ===============================
-
-function showAllBooks() {
-
-  document.querySelectorAll(".book-card").forEach(card => {
-
-    card.style.display = "";
-
-  });
-
-}
-
-
-// ===============================
-// دریافت کتاب‌ها از Supabase
-// ===============================
-
+// دریافت کتاب‌ها
 async function loadBooks() {
 
-  const container =
-    document.querySelector(".books-grid");
-
-  if (!container) return;
-
-
-  const { data, error } = await db
-
+  const { data: books, error } = await db
     .from("books")
-
     .select("*")
-
-    .order("created_at", {
-      ascending: false
-    });
-
+    .order("created_at", { ascending: false });
 
   if (error) {
-
-    console.error(
-      "Supabase Error:",
-      error
-    );
-
+    console.error("خطا در دریافت کتاب‌ها:", error);
     return;
-
   }
 
+  const container =
+    document.querySelector("#books-grid") ||
+    document.querySelector(".books-grid");
 
-  // اگر هنوز کتابی اضافه نشده
-  if (!data || data.length === 0) {
-
+  if (!container) {
+    console.error("محل نمایش کتاب‌ها پیدا نشد.");
     return;
-
   }
 
+  if (!books || books.length === 0) {
+    container.innerHTML = `
+      <div class="empty-books">
+        هنوز کتابی اضافه نشده است.
+      </div>
+    `;
+    return;
+  }
 
-  // پاک کردن کتاب‌های نمونه
-  container.innerHTML = "";
+  container.innerHTML = books.map(book => {
 
-
-  // ساخت کارت کتاب‌ها
-  data.forEach(book => {
-
-    const card =
-      document.createElement("div");
-
-
-    card.className = "book-card";
-
+    const title = escapeHTML(book.title || "بدون عنوان");
+    const author = escapeHTML(book.author || "ناشناس");
+    const category = escapeHTML(book.category || "عمومی");
+    const description = escapeHTML(book.description || "");
 
     const cover = book.cover_url
+      ? escapeHTML(book.cover_url)
+      : "https://placehold.co/600x800/5b4bdb/ffffff?text=BOOK";
 
-      ? `
-        <img
-          src="${book.cover_url}"
-          alt="${book.title || "کتاب"}"
+    const pdfUrl = book.pdf_url || "";
+
+    let readButton = "";
+
+    if (pdfUrl) {
+      readButton = `
+        <a
+          class="read-btn"
+          href="${escapeHTML(pdfUrl)}"
+          target="_blank"
+          rel="noopener noreferrer"
         >
-      `
-
-      : `
-        <div class="fake-cover">
-          📚
-        </div>
+          📖 مطالعه کتاب
+        </a>
       `;
+    }
 
+    return `
+      <article class="book-card">
 
-    card.innerHTML = `
+        <img
+          class="book-cover"
+          src="${cover}"
+          alt="${title}"
+          loading="lazy"
+        >
 
-      <div class="book-cover">
+        <div class="book-info">
 
-        ${cover}
+          <h3>${title}</h3>
 
-      </div>
+          <p class="author">
+            نویسنده: ${author}
+          </p>
 
-
-      <div class="book-info">
-
-        <span class="book-category">
-
-          ${book.category || "عمومی"}
-
-        </span>
-
-
-        <h3>
-
-          ${book.title || "بدون عنوان"}
-
-        </h3>
-
-
-        <p>
-
-          ${book.author || "نویسنده نامشخص"}
-
-        </p>
-
-
-        <div class="book-bottom">
-
-          <span>
-
-            ⭐ ${book.rating || "—"}
-
+          <span class="category">
+            ${category}
           </span>
 
+          <div class="book-bottom">
 
-          ${
-            book.pdf_url
+            <span class="rating">
+              ⭐ ${book.rating || 0}
+            </span>
 
-              ? `
-                <a
-                  href="${book.pdf_url}"
-                  target="_blank"
-                  rel="noopener"
-                >
-                  مطالعه
-                </a>
-              `
+            ${readButton}
 
-              : `
-                <span>
-                  به‌زودی
-                </span>
-              `
-          }
+          </div>
 
         </div>
 
-      </div>
-
+      </article>
     `;
 
-
-    container.appendChild(card);
-
-  });
-
+  }).join("");
 }
 
 
-// ===============================
-// اجرای سایت
-// ===============================
+// جستجوی کتاب‌ها
+const searchInput = document.querySelector("#search");
 
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
+if (searchInput) {
 
+  searchInput.addEventListener("input", async (event) => {
 
-    // بازیابی حالت تاریک
+    const text = event.target.value.trim();
 
-    if (
-      localStorage.getItem("darkMode") === "true"
-    ) {
+    const { data, error } = await db
+      .from("books")
+      .select("*")
+      .ilike("title", `%${text}%`)
+      .order("created_at", { ascending: false });
 
-      document.body.classList.add("dark");
-
+    if (error) {
+      console.error(error);
+      return;
     }
 
+    const container =
+      document.querySelector("#books-grid") ||
+      document.querySelector(".books-grid");
 
-    // دریافت کتاب‌ها
+    if (!container) return;
 
-    loadBooks();
+    container.innerHTML = data.map(book => {
 
-  }
-);
+      const title = escapeHTML(book.title || "بدون عنوان");
+      const author = escapeHTML(book.author || "ناشناس");
+
+      const cover = book.cover_url
+        ? escapeHTML(book.cover_url)
+        : "https://placehold.co/600x800/5b4bdb/ffffff?text=BOOK";
+
+      return `
+        <article class="book-card">
+
+          <img
+            class="book-cover"
+            src="${cover}"
+            alt="${title}"
+          >
+
+          <div class="book-info">
+
+            <h3>${title}</h3>
+
+            <p class="author">
+              نویسنده: ${author}
+            </p>
+
+            <div class="book-bottom">
+
+              <span class="rating">
+                ⭐ ${book.rating || 0}
+              </span>
+
+              ${
+                book.pdf_url
+                ? `
+                  <a
+                    class="read-btn"
+                    href="${escapeHTML(book.pdf_url)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    📖 مطالعه کتاب
+                  </a>
+                `
+                : ""
+              }
+
+            </div>
+
+          </div>
+
+        </article>
+      `;
+
+    }).join("");
+  });
+}
+
+
+// اجرای اولیه
+loadBooks();
