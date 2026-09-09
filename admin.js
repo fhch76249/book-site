@@ -1,10 +1,43 @@
 const SUPABASE_URL="https://pophcxrfrooqluwrujbl.supabase.co",SUPABASE_KEY="sb_publishable_cmZlKwLESb-jIWkkQAC7yg_KxNdkJfn",db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const $=i=>document.getElementById(i),esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 function showMsg(t,type="ok"){const m=$("msg");m.textContent=t;m.className="msg "+type;m.style.display="block";setTimeout(()=>m.style.display="none",4000)}
 async function requireLogin(){const{data:{user}}=await db.auth.getUser();if(!user){location.href="login.html";return null}$("adminEmail").textContent=user.email||"مدیر";return user}async function logout(){await db.auth.signOut();location.href="login.html"}
-async function uploadFile(f,b){if(!f)return null;const p=Date.now()+"_"+Math.random().toString(36).slice(2,8)+"_"+f.name.replace(/[^a-zA-Z0-9._-]/g,"_");const{error}=await db.storage.from(b).upload(p,f,{cacheControl:"3600",upsert:false});if(error)throw error;return db.storage.from(b).getPublicUrl(p).data.publicUrl}
+async function uploadFile(f,b){
+  if(!f)return null;
+  const ext=(f.name.split(".").pop()||"").toLowerCase();
+  const safeBase=f.name.replace(/\.[^/.]+$/,"_").replace(/[^a-zA-Z0-9_-]/g,"_").slice(0,80);
+  const path=Date.now()+"_"+Math.random().toString(36).slice(2,8)+"_"+safeBase+(ext?"."+ext:"");
+  const bucket=db.storage.from(b);
+  const {error}=await bucket.upload(path,f,{cacheControl:"3600",upsert:false,contentType:f.type||undefined});
+  if(error){
+    const where=b==="books"?"فایل PDF":"جلد کتاب";
+    throw new Error(where+" آپلود نشد: "+(error.message||"خطای Storage")+"\nاگر این اولین بار است، fix.sql را در Supabase اجرا کنید.");
+  }
+  const {data}=bucket.getPublicUrl(path);
+  if(!data?.publicUrl) throw new Error("آدرس عمومی فایل ساخته نشد.");
+  return data.publicUrl;
+}
 async function loadAdminBooks(){const l=$("booksList"),{data,error}=await db.from("books").select("*").order("created_at",{ascending:false});if(error){l.textContent="خطا در دریافت کتاب‌ها.";return}if(!data?.length){l.textContent="هنوز کتابی اضافه نشده است.";return}l.innerHTML=data.map(b=>`<div class="book-row">${b.cover_url?`<img class="thumb" src="${esc(b.cover_url)}" alt="">`:`<div class="thumb">بدون تصویر</div>`}<div><h3>${esc(b.title)}</h3><p>نویسنده: ${esc(b.author||"نامشخص")}</p><p>دسته: ${esc(b.category||"بدون دسته")}</p><p>امتیاز: ${b.rating!=null?esc(b.rating):"-"}</p></div><div class="row-actions"><button class="primary" onclick="startEdit('${b.id}')">ویرایش</button><button class="danger" onclick="deleteBook('${b.id}')">حذف</button></div></div>`).join("")}
 async function startEdit(id){const{data:b,error}=await db.from("books").select("*").eq("id",id).single();if(error||!b){showMsg("کتاب پیدا نشد.","error");return}$("bookId").value=b.id;$("title").value=b.title||"";$("author").value=b.author||"";$("category").value=b.category||"";$("rating").value=b.rating??"";$("description").value=b.description||"";$("formTitle").textContent="ویرایش کتاب";$("saveBtn").textContent="ذخیره تغییرات";$("cancelEdit").style.display="inline-block";scrollTo({top:0,behavior:"smooth"})}function resetForm(){$("bookForm").reset();$("bookId").value="";$("formTitle").textContent="افزودن کتاب";$("saveBtn").textContent="ذخیره کتاب";$("cancelEdit").style.display="none"}
-async function saveBook(e){e.preventDefault();const id=$("bookId").value.trim(),title=$("title").value.trim();if(!title){showMsg("عنوان کتاب را وارد کنید.","error");return}const btn=$("saveBtn");btn.disabled=true;try{let cu=null,pu=null;if($("cover").files[0])cu=await uploadFile($("cover").files[0],"covers");if($("pdf").files[0])pu=await uploadFile($("pdf").files[0],"books");const p={title,author:$("author").value.trim(),category:$("category").value.trim(),description:$("description").value.trim(),rating:$("rating").value.trim()===""?null:Number($("rating").value)};if(cu)p.cover_url=cu;if(pu)p.pdf_url=pu;const r=id?await db.from("books").update(p).eq("id",id):await db.from("books").insert(p);if(r.error)throw r.error;showMsg(id?"کتاب ویرایش شد.":"کتاب اضافه شد.");resetForm();await loadAdminBooks()}catch(e){showMsg(e.message||"خطا","error")}finally{btn.disabled=false}}
+async function saveBook(e){
+  e.preventDefault();
+  const id=$("bookId").value.trim(),title=$("title").value.trim();
+  if(!title){showMsg("عنوان کتاب را وارد کنید.","error");return}
+  const btn=$("saveBtn");btn.disabled=true;
+  try{
+    const coverFile=$("cover").files[0],pdfFile=$("pdf").files[0];
+    if(coverFile && !coverFile.type.startsWith("image/")) throw new Error("فایل جلد باید تصویر باشد.");
+    if(pdfFile && pdfFile.type!=="application/pdf" && !pdfFile.name.toLowerCase().endsWith(".pdf")) throw new Error("فایل کتاب باید PDF باشد.");
+    let cu=null,pu=null;
+    if(coverFile)cu=await uploadFile(coverFile,"covers");
+    if(pdfFile)pu=await uploadFile(pdfFile,"books");
+    const p={title,author:$("author").value.trim(),category:$("category").value.trim(),description:$("description").value.trim(),rating:$("rating").value.trim()===""?null:Number($("rating").value)};
+    if(cu)p.cover_url=cu;if(pu)p.pdf_url=pu;
+    const r=id?await db.from("books").update(p).eq("id",id):await db.from("books").insert(p);
+    if(r.error)throw r.error;
+    showMsg(id?"کتاب ویرایش شد.":"کتاب با موفقیت اضافه شد.");resetForm();await loadAdminBooks();
+  }catch(e){console.error(e);showMsg(e.message||"خطا در ذخیره کتاب","error")}
+  finally{btn.disabled=false}
+}
 async function deleteBook(id){if(!confirm("آیا از حذف این کتاب مطمئن هستید؟"))return;const{error}=await db.from("books").delete().eq("id",id);if(error){showMsg(error.message,"error");return}showMsg("کتاب حذف شد.");await loadAdminBooks();await loadViewStats();await loadWeeklyViews()}
 async function loadViewStats(){
   const total=await db.from("page_views").select("id",{count:"exact",head:true});

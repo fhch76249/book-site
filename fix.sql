@@ -25,3 +25,42 @@ update public.books set category = null where trim(coalesce(category,'')) = 'ع�
 -- بررسی نتیجه
 select page, count(*) as count from public.page_views group by page order by page;
 select count(*) as total_views from public.page_views;
+
+
+-- مجوزهای Storage برای آپلود PDF و جلد توسط مدیر
+insert into storage.buckets (id, name, public) values ('books', 'books', true)
+on conflict (id) do update set public = true;
+insert into storage.buckets (id, name, public) values ('covers', 'covers', true)
+on conflict (id) do update set public = true;
+
+drop policy if exists "Admin can upload book files" on storage.objects;
+create policy "Admin can upload book files" on storage.objects
+for insert to authenticated
+with check (bucket_id = 'books' and auth.uid() = '71ed2c13-04cc-41a3-8042-7b7a1791000a'::uuid);
+
+drop policy if exists "Admin can update book files" on storage.objects;
+create policy "Admin can update book files" on storage.objects
+for update to authenticated
+using (bucket_id = 'books' and auth.uid() = '71ed2c13-04cc-41a3-8042-7b7a1791000a'::uuid)
+with check (bucket_id = 'books' and auth.uid() = '71ed2c13-04cc-41a3-8042-7b7a1791000a'::uuid);
+
+drop policy if exists "Admin can delete book files" on storage.objects;
+create policy "Admin can delete book files" on storage.objects
+for delete to authenticated
+using (bucket_id = 'books' and auth.uid() = '71ed2c13-04cc-41a3-8042-7b7a1791000a'::uuid);
+
+drop policy if exists "Admin can upload cover files" on storage.objects;
+create policy "Admin can upload cover files" on storage.objects
+for insert to authenticated
+with check (bucket_id = 'covers' and auth.uid() = '71ed2c13-04cc-41a3-8042-7b7a1791000a'::uuid);
+
+drop policy if exists "Admin can update cover files" on storage.objects;
+create policy "Admin can update cover files" on storage.objects
+for update to authenticated
+using (bucket_id = 'covers' and auth.uid() = '71ed2c13-04cc-41a3-8042-7b7a1791000a'::uuid)
+with check (bucket_id = 'covers' and auth.uid() = '71ed2c13-04cc-41a3-8042-7b7a1791000a'::uuid);
+
+drop policy if exists "Admin can delete cover files" on storage.objects;
+create policy "Admin can delete cover files" on storage.objects
+for delete to authenticated
+using (bucket_id = 'covers' and auth.uid() = '71ed2c13-04cc-41a3-8042-7b7a1791000a'::uuid);
