@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>جستجوی کتاب | کتابخانه</title>
-<link rel="stylesheet" href="style.css?v=200">
+<link rel="stylesheet" href="style.css?v=400">
 <style>
 .search-page{width:min(1200px,94%);margin:35px auto}
 .search-top{background:#faf9f6;border:1px solid #ddd9d2;border-radius:20px;padding:25px;margin-bottom:20px}
@@ -40,6 +40,7 @@
 </main>
 
 <div id="fixedAd" class="ad-fixed" hidden></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="ads.js?v=301"></script>
-<script src="search.js?v=201"></script></body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="ads.js?v=400"></script>
+<script src="search.js?v=201"></script>
+<script>document.addEventListener("DOMContentLoaded",()=>{const bad=["هر صفحه، یک قدم به سوی آزادی است","هر صفحه یک قدم به سوی آزادی است","خواندن، راهی برای دیدن دنیاهای تازه است","خواندن راهی برای دیدن دنیاهای تازه است","عضویت در خبرنامه","عضویت در خبرنامه سایت"];document.querySelectorAll("body *").forEach(el=>{if(el.children.length===0){const t=(el.textContent||"").trim();if(bad.some(x=>t.includes(x)))el.remove()}});document.querySelectorAll('a[href="login.html"]').forEach(a=>a.remove())});</script></body>
 </html>

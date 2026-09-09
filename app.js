@@ -15,7 +15,7 @@ async function loadBooks(){
   const {data,error}=await db.from("books").select("*").order("created_at",{ascending:false});
   if(error){console.error(error);grid.innerHTML="<div class='loading'>خطا در دریافت کتاب‌ها. اتصال پایگاه داده را بررسی کنید.</div>";return}
   // دسته «عاشقانه» از رابط سایت حذف شده و دیگر به عنوان دسته نمایش داده نمی‌شود.
-  books=(data||[]).filter(b=>normalize(b.category)!=="عاشقانه");
+  books=data||[];
   render(books);
   const s=[...books].sort((a,b)=>(Number(b.rating)||0)-(Number(a.rating)||0));
   if(popular)popular.innerHTML=s.slice(0,6).map(card).join("")||"<div class='loading'>کتابی وجود ندارد.</div>";
@@ -23,9 +23,7 @@ async function loadBooks(){
 }
 function goSearch(q){q=q.trim();location.href="search.html"+(q?"?q="+encodeURIComponent(q):"")}
 document.getElementById("homeSearchForm")?.addEventListener("submit",e=>{e.preventDefault();goSearch(document.getElementById("searchInput").value)});
-document.querySelectorAll("[data-category]").forEach(x=>x.addEventListener("click",()=>{const c=x.dataset.category;render(c==="همه"?books:books.filter(b=>normalize(b.category)===normalize(c)));document.querySelectorAll("[data-category]").forEach(y=>y.classList.remove("active"));x.classList.add("active")}));
 const dm=document.getElementById("darkMode");
 if(localStorage.getItem("darkMode")==="1")document.body.classList.add("dark");
 dm?.addEventListener("click",()=>{document.body.classList.toggle("dark");localStorage.setItem("darkMode",document.body.classList.contains("dark")?"1":"0")});
-document.getElementById("newsletterBtn")?.addEventListener("click",()=>alert("عضویت شما ثبت شد."));
 recordHomeView();loadBooks();
