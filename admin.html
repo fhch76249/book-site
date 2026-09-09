@@ -1,23 +1,47 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
+
 <head>
+
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1"
+>
 
 <title>پنل مدیریت | کتابخانه</title>
 
-<link rel="stylesheet" href="style.css?v=6">
+<link
+  rel="stylesheet"
+  href="style.css?v=6"
+>
 
 <style>
 
+/* =========================
+   پایه
+========================= */
+
 body{
   background:#f6f7fb;
+  color:#222;
 }
+
+
+/* =========================
+   صفحه مدیریت
+========================= */
 
 .admin-wrap{
   width:min(1100px,94%);
   margin:30px auto;
 }
+
+
+/* =========================
+   هدر
+========================= */
 
 .admin-head{
   display:flex;
@@ -28,13 +52,35 @@ body{
   margin-bottom:20px;
 }
 
+.admin-head h1{
+  margin:0 0 7px;
+  font-size:28px;
+}
+
+.admin-head p{
+  margin:0;
+  color:#777;
+  font-size:13px;
+}
+
+
+/* =========================
+   پنل
+========================= */
+
 .panel{
   background:#fff;
   border-radius:20px;
   padding:22px;
-  box-shadow:0 10px 35px rgba(0,0,0,.08);
+  box-shadow:
+    0 10px 35px rgba(0,0,0,.08);
   margin-bottom:20px;
 }
+
+
+/* =========================
+   فرم
+========================= */
 
 .grid2{
   display:grid;
@@ -56,15 +102,29 @@ body{
   border:1px solid #ddd;
   border-radius:10px;
   font:inherit;
+  background:#fff;
+  color:#222;
+}
+
+.field input:focus,
+.field textarea:focus{
+  outline:none;
+  border-color:#999;
 }
 
 .field textarea{
-  min-height:100px;
+  min-height:110px;
+  resize:vertical;
 }
 
 .full{
   grid-column:1/-1;
 }
+
+
+/* =========================
+   دکمه‌ها
+========================= */
 
 .actions{
   display:flex;
@@ -81,6 +141,7 @@ body{
   padding:12px 18px;
   font-weight:700;
   cursor:pointer;
+  font:inherit;
 }
 
 .primary{
@@ -88,9 +149,22 @@ body{
   color:#fff;
 }
 
+.primary:hover{
+  background:#000;
+}
+
+.primary:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
 .danger{
   background:#ffe4e4;
   color:#a00000;
+}
+
+.danger:hover{
+  background:#ffd3d3;
 }
 
 .logout{
@@ -98,34 +172,14 @@ body{
   color:#fff;
 }
 
-.book-row{
-  display:grid;
-  grid-template-columns:80px 1fr auto;
-  gap:15px;
-  align-items:center;
-  border-top:1px solid #eee;
-  padding:14px 0;
+.logout:hover{
+  background:#000;
 }
 
-.thumb{
-  width:80px;
-  height:100px;
-  border-radius:10px;
-  object-fit:cover;
-  background:#eee;
-  display:grid;
-  place-items:center;
-  font-size:28px;
-}
 
-.book-row h3{
-  margin:0 0 6px;
-}
-
-.book-row p{
-  margin:3px 0;
-  color:#777;
-}
+/* =========================
+   پیام
+========================= */
 
 .msg{
   padding:12px;
@@ -146,14 +200,23 @@ body{
 
 
 /* =========================
-   آمار بازدید
+   آمار
 ========================= */
 
 .stats-grid{
   display:grid;
-  grid-template-columns:repeat(2,1fr);
+  grid-template-columns:
+    repeat(2,1fr);
   gap:15px;
   margin:20px 0;
+}
+
+.stats-extra{
+  display:grid;
+  grid-template-columns:
+    repeat(2,1fr);
+  gap:15px;
+  margin-bottom:20px;
 }
 
 .stat-card{
@@ -182,6 +245,11 @@ body{
   margin-top:5px;
 }
 
+
+/* =========================
+   پربازدیدها
+========================= */
+
 .views-box{
   background:#f7f7f5;
   border:1px solid #ddd;
@@ -191,11 +259,13 @@ body{
 
 .views-box h3{
   margin-top:0;
+  margin-bottom:15px;
 }
 
 .view-row{
   display:grid;
-  grid-template-columns:40px 1fr auto;
+  grid-template-columns:
+    40px 1fr auto;
   gap:10px;
   align-items:center;
   padding:13px 5px;
@@ -206,7 +276,169 @@ body{
   border-bottom:0;
 }
 
+
+/* =========================
+   نمودار
+========================= */
+
+.chart-box{
+  margin-top:20px;
+}
+
+.chart-row{
+  display:grid;
+  grid-template-columns:
+    80px 1fr 45px;
+  align-items:center;
+  gap:10px;
+  margin:14px 0;
+}
+
+.chart-row > span{
+  font-size:12px;
+  color:#666;
+}
+
+.chart-row > b{
+  text-align:center;
+}
+
+.chart-row > div{
+  width:100%;
+}
+
+.chart-bar{
+  height:22px;
+  background:#222;
+  border-radius:8px;
+  transition:.3s;
+  min-width:3px;
+}
+
+.chart-empty{
+  text-align:center;
+  color:#777;
+  padding:20px;
+}
+
+
+/* =========================
+   کتاب‌ها
+========================= */
+
+.book-row{
+  display:grid;
+  grid-template-columns:
+    80px 1fr auto;
+  gap:15px;
+  align-items:center;
+  border-top:1px solid #eee;
+  padding:14px 0;
+}
+
+.book-row:first-child{
+  border-top:0;
+}
+
+.thumb{
+  width:80px;
+  height:100px;
+  border-radius:10px;
+  object-fit:cover;
+  background:#eee;
+  display:grid;
+  place-items:center;
+  font-size:28px;
+}
+
+.book-row h3{
+  margin:0 0 6px;
+  font-size:17px;
+}
+
+.book-row p{
+  margin:3px 0;
+  color:#777;
+  font-size:13px;
+}
+
+.row-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+
+/* =========================
+   حالت تاریک
+========================= */
+
+body.dark{
+  background:#111;
+  color:#eee;
+}
+
+body.dark .panel{
+  background:#1d1d1d;
+  color:#eee;
+}
+
+body.dark .field input,
+body.dark .field textarea{
+  background:#222;
+  color:#eee;
+  border-color:#444;
+}
+
+body.dark .stat-card,
+body.dark .views-box{
+  background:#222;
+  border-color:#444;
+}
+
+body.dark .stat-card strong{
+  color:#fff;
+}
+
+body.dark .stat-card small,
+body.dark .admin-head p,
+body.dark .book-row p,
+body.dark .chart-row > span{
+  color:#aaa;
+}
+
+body.dark .book-row{
+  border-color:#333;
+}
+
+body.dark .danger{
+  background:#3b2020;
+  color:#ff9b9b;
+}
+
+body.dark .chart-bar{
+  background:#fff;
+}
+
+
+/* =========================
+   موبایل
+========================= */
+
 @media(max-width:700px){
+
+  .admin-wrap{
+    width:94%;
+    margin:18px auto;
+  }
+
+  .admin-head{
+    align-items:flex-start;
+  }
+
+  .admin-head h1{
+    font-size:23px;
+  }
 
   .grid2{
     grid-template-columns:1fr;
@@ -216,8 +448,17 @@ body{
     grid-column:auto;
   }
 
+  .stats-grid{
+    grid-template-columns:1fr;
+  }
+
+  .stats-extra{
+    grid-template-columns:1fr;
+  }
+
   .book-row{
-    grid-template-columns:60px 1fr;
+    grid-template-columns:
+      60px 1fr;
   }
 
   .book-row .row-actions{
@@ -229,27 +470,63 @@ body{
     height:80px;
   }
 
-  .stats-grid{
-    grid-template-columns:1fr;
+  .row-actions button{
+    flex:1;
+  }
+
+  .chart-row{
+    grid-template-columns:
+      65px 1fr 35px;
+  }
+
+  .panel{
+    padding:17px;
+    border-radius:16px;
   }
 
 }
 
+
+/* =========================
+   فایل
+========================= */
+
+input[type="file"]{
+  padding:9px;
+}
+
 </style>
+
 </head>
+
 
 <body>
 
+
 <div class="admin-wrap">
+
+
+  <!-- =====================
+       هدر
+  ====================== -->
 
   <div class="admin-head">
 
     <div>
-      <h1>⚙️ پنل مدیریت کتابخانه</h1>
-      <p id="adminEmail">در حال بررسی حساب...</p>
+
+      <h1>
+        ⚙️ پنل مدیریت کتابخانه
+      </h1>
+
+      <p id="adminEmail">
+        در حال بررسی حساب...
+      </p>
+
     </div>
 
+
     <div class="actions">
+
       <a
         class="primary"
         style="text-decoration:none"
@@ -258,24 +535,39 @@ body{
         مشاهده سایت
       </a>
 
-      <button class="logout" id="logoutBtn">
+
+      <button
+        class="logout"
+        id="logoutBtn"
+      >
         خروج
       </button>
+
     </div>
 
   </div>
 
 
-  <div id="msg" class="msg"></div>
+  <!-- =====================
+       پیام
+  ====================== -->
+
+  <div
+    id="msg"
+    class="msg"
+  ></div>
 
 
-  <!-- افزودن / ویرایش کتاب -->
+  <!-- =====================
+       افزودن / ویرایش کتاب
+  ====================== -->
 
   <section class="panel">
 
     <h2 id="formTitle">
       ➕ افزودن کتاب
     </h2>
+
 
     <form id="bookForm">
 
@@ -284,9 +576,14 @@ body{
         id="bookId"
       >
 
+
       <div class="grid2">
 
+
+        <!-- عنوان -->
+
         <div class="field">
+
           <label for="title">
             عنوان کتاب *
           </label>
@@ -294,20 +591,32 @@ body{
           <input
             id="title"
             required
+            placeholder="مثلاً صد سال تنهایی"
           >
+
         </div>
 
 
+        <!-- نویسنده -->
+
         <div class="field">
+
           <label for="author">
             نویسنده
           </label>
 
-          <input id="author">
+          <input
+            id="author"
+            placeholder="نام نویسنده"
+          >
+
         </div>
 
 
+        <!-- دسته -->
+
         <div class="field">
+
           <label for="category">
             دسته‌بندی
           </label>
@@ -316,10 +625,14 @@ body{
             id="category"
             placeholder="مثلاً رمان"
           >
+
         </div>
 
 
+        <!-- امتیاز -->
+
         <div class="field">
+
           <label for="rating">
             امتیاز
           </label>
@@ -332,19 +645,30 @@ body{
             step="0.1"
             placeholder="4.8"
           >
+
         </div>
 
 
+        <!-- توضیحات -->
+
         <div class="field full">
+
           <label for="description">
             توضیحات
           </label>
 
-          <textarea id="description"></textarea>
+          <textarea
+            id="description"
+            placeholder="توضیح کوتاهی درباره کتاب..."
+          ></textarea>
+
         </div>
 
 
+        <!-- جلد -->
+
         <div class="field">
+
           <label for="cover">
             جلد کتاب
           </label>
@@ -354,10 +678,14 @@ body{
             type="file"
             accept="image/*"
           >
+
         </div>
 
 
+        <!-- PDF -->
+
         <div class="field">
+
           <label for="pdf">
             فایل PDF
           </label>
@@ -367,12 +695,15 @@ body{
             type="file"
             accept="application/pdf"
           >
+
         </div>
+
 
       </div>
 
 
       <div class="actions">
+
 
         <button
           class="primary"
@@ -381,6 +712,7 @@ body{
         >
           ذخیره کتاب
         </button>
+
 
         <button
           class="danger"
@@ -391,6 +723,7 @@ body{
           لغو ویرایش
         </button>
 
+
       </div>
 
     </form>
@@ -398,7 +731,9 @@ body{
   </section>
 
 
-  <!-- آمار بازدید -->
+  <!-- =====================
+       آمار بازدید
+  ====================== -->
 
   <section class="panel">
 
@@ -406,11 +741,17 @@ body{
       📊 آمار بازدید سایت
     </h2>
 
+
+    <!-- دو آمار اصلی -->
+
     <div class="stats-grid">
+
 
       <div class="stat-card">
 
-        <span>👥</span>
+        <span>
+          👥
+        </span>
 
         <strong id="todayViews">
           0
@@ -425,7 +766,9 @@ body{
 
       <div class="stat-card">
 
-        <span>📈</span>
+        <span>
+          📈
+        </span>
 
         <strong id="totalViews">
           0
@@ -437,8 +780,53 @@ body{
 
       </div>
 
+
     </div>
 
+
+    <!-- آمار تفکیکی -->
+
+    <div class="stats-extra">
+
+
+      <div class="stat-card">
+
+        <span>
+          🏠
+        </span>
+
+        <strong id="homeViews">
+          0
+        </strong>
+
+        <small>
+          بازدید صفحه اصلی امروز
+        </small>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <span>
+          📖
+        </span>
+
+        <strong id="bookViews">
+          0
+        </strong>
+
+        <small>
+          بازدید صفحات کتاب امروز
+        </small>
+
+      </div>
+
+
+    </div>
+
+
+    <!-- پربازدیدترین کتاب‌ها -->
 
     <div class="views-box">
 
@@ -446,16 +834,40 @@ body{
         🔥 پربازدیدترین کتاب‌های امروز
       </h3>
 
+
       <div id="popularViews">
+
         در حال بارگذاری...
+
       </div>
 
     </div>
 
+
+    <!-- نمودار -->
+
+    <div class="views-box chart-box">
+
+      <h3>
+        📈 بازدید ۷ روز اخیر
+      </h3>
+
+
+      <div id="viewsChart">
+
+        در حال بارگذاری نمودار...
+
+      </div>
+
+    </div>
+
+
   </section>
 
 
-  <!-- لیست کتاب‌ها -->
+  <!-- =====================
+       لیست کتاب‌ها
+  ====================== -->
 
   <section class="panel">
 
@@ -463,18 +875,35 @@ body{
       📚 کتاب‌های موجود
     </h2>
 
+
     <div id="booksList">
+
       در حال بارگذاری...
+
     </div>
 
   </section>
 
+
 </div>
 
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- =====================
+     Supabase
+====================== -->
 
-<script src="admin.js?v=2"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+
+<!-- =====================
+     کد مدیریت
+====================== -->
+
+<script src="admin.js?v=3"></script>
+
 
 </body>
+
 </html>
