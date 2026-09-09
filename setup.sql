@@ -8,4 +8,4 @@ alter table public.page_views enable row level security;
 drop policy if exists "Anyone can add page views" on public.page_views;
 create policy "Anyone can add page views" on public.page_views for insert to anon, authenticated with check (true);
 drop policy if exists "Admins can read page views" on public.page_views;
-create policy "Admins can read page views" on public.page_views for select to authenticated using (auth.uid() = 'YOUR_ADMIN_UUID'::uuid);
+create policy "Admins can read page views" on public.page_views for select to authenticated using (auth.uid() = '71ed2c13-04cc-41a3-8042-7b7a1791000a'::uuid);
