@@ -35,6 +35,37 @@ function esc(value) {
 }
 
 
+/* ثبت بازدید صفحه اصلی */
+
+async function recordHomeView() {
+
+  try {
+
+    const { error } = await db
+      .from("page_views")
+      .insert({
+        page: "home"
+      });
+
+    if (error) {
+      console.log(
+        "Home view error:",
+        error
+      );
+    }
+
+  } catch (err) {
+
+    console.log(
+      "Home view error:",
+      err
+    );
+
+  }
+
+}
+
+
 /* کارت کتاب */
 
 function card(book) {
@@ -345,5 +376,7 @@ if (darkMode) {
 
 
 /* شروع */
+
+recordHomeView();
 
 loadBooks();
