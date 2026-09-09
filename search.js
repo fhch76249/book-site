@@ -3,15 +3,15 @@ const SUPABASE_KEY="sb_publishable_cmZlKwLESb-jIWkkQAC7yg_KxNdkJfn";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const results=document.getElementById("results"),queryInput=document.getElementById("query"),countEl=document.getElementById("resultCount");
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
-const normalize=s=>String(s??"").trim().toLocaleLowerCase("fa-IR");
+function normalize(v){return String(v??"").normalize("NFKC").replace(/ي/g,"ی").replace(/ك/g,"ک").replace(/\u200c/g," ").replace(/\s+/g," ").trim().toLocaleLowerCase("fa-IR")}
 function card(b){const c=b.cover_url||"https://via.placeholder.com/300x450?text=Book";return `<article class="book-card"><a href="book.html?id=${encodeURIComponent(b.id)}"><img src="${esc(c)}" alt="${esc(b.title)}" loading="lazy"></a><div class="book-info"><h3>${esc(b.title)}</h3><p>${esc(b.author||"نامشخص")}</p><div class="rating">${b.rating!=null?"امتیاز "+esc(b.rating):"بدون امتیاز"}</div><a class="book-btn" href="book.html?id=${encodeURIComponent(b.id)}">مشاهده کتاب</a></div></article>`}
 async function searchBooks(q){
- queryInput.value=q; results.innerHTML='<div class="loading">در حال جستجوی کتاب‌ها...</div>';
- if(!q){results.innerHTML='<div class="empty">عبارت جستجو را وارد کنید.</div>';countEl.textContent="0 نتیجه";return}
- const {data,error}=await db.from("books").select("id,title,author,category,description,cover_url,rating,created_at").order("created_at",{ascending:false});
- if(error){console.error("Search error:",error);results.innerHTML='<div class="empty">خطا در دریافت کتاب‌ها. اتصال Supabase یا دسترسی خواندن کتاب‌ها را بررسی کنید.</div>';countEl.textContent="";return}
+ queryInput.value=q;results.innerHTML='<div class="loading">در حال جستجوی کتاب‌ها...</div>';
  const nq=normalize(q);
- const found=(data||[]).filter(b=>normalize(b.category)!=="عاشقانه" && [b.title,b.author,b.category,b.description].some(v=>normalize(v).includes(nq)));
+ if(!nq){results.innerHTML='<div class="empty">عبارت جستجو را وارد کنید.</div>';countEl.textContent="0 نتیجه";return}
+ const {data,error}=await db.from("books").select("id,title,author,category,description,cover_url,rating,created_at").order("created_at",{ascending:false});
+ if(error){console.error(error);results.innerHTML='<div class="empty">خطا در دریافت کتاب‌ها: '+esc(error.message)+'</div>';countEl.textContent="";return}
+ const found=(data||[]).filter(b=>normalize(b.category)!=="عاشقانه"&&[b.title,b.author,b.category,b.description].some(v=>normalize(v).includes(nq)));
  countEl.textContent=`${found.length} نتیجه`;
  results.innerHTML=found.length?found.map(card).join(""):`<div class="empty">برای «${esc(q)}» کتابی پیدا نشد.</div>`;
 }

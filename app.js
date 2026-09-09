@@ -4,7 +4,7 @@ const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const grid=document.getElementById("booksGrid"),popular=document.getElementById("popularGrid"),best=document.getElementById("bestBooks");
 let books=[];
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
-const normalize=s=>String(s??"").trim().toLocaleLowerCase("fa-IR");
+const normalize=s=>String(s??"").normalize("NFKC").replace(/ي/g,"ی").replace(/ك/g,"ک").replace(/\u200c/g," ").replace(/\s+/g," ").trim().toLocaleLowerCase("fa-IR");
 function card(b){const c=b.cover_url||"https://via.placeholder.com/300x450?text=Book";return `<article class="book-card"><a href="book.html?id=${encodeURIComponent(b.id)}"><img src="${esc(c)}" alt="${esc(b.title)}" loading="lazy"></a><div class="book-info"><h3>${esc(b.title)}</h3><p>${esc(b.author||"نامشخص")}</p><div class="rating">${b.rating!=null?"امتیاز "+esc(b.rating):"بدون امتیاز"}</div><a class="book-btn" href="book.html?id=${encodeURIComponent(b.id)}">مشاهده کتاب</a></div></article>`}
 function render(a){grid.innerHTML=a.length?a.map(card).join(""):"<div class='loading'>کتابی پیدا نشد.</div>"}
 async function recordHomeView(){
