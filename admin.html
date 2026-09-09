@@ -3,51 +3,478 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>پنل مدیریت | کتابخانه</title>
-<link rel="stylesheet" href="style.css">
+
+<link rel="stylesheet" href="style.css?v=6">
+
 <style>
-body{background:#f6f7fb}.admin-wrap{width:min(1100px,94%);margin:30px auto}
-.admin-head{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:20px}
-.panel{background:#fff;border-radius:20px;padding:22px;box-shadow:0 10px 35px rgba(0,0,0,.08);margin-bottom:20px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:15px}.field label{display:block;font-weight:700;margin-bottom:7px}
-.field input,.field textarea{width:100%;box-sizing:border-box;padding:12px;border:1px solid #ddd;border-radius:10px;font:inherit}
-.field textarea{min-height:100px}.full{grid-column:1/-1}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
-.primary,.danger,.logout{border:0;border-radius:10px;padding:12px 18px;font-weight:700}
-.primary{background:#5b4bdb;color:#fff}.danger{background:#ffe4e4;color:#a00000}.logout{background:#222;color:#fff}
-.book-row{display:grid;grid-template-columns:80px 1fr auto;gap:15px;align-items:center;border-top:1px solid #eee;padding:14px 0}
-.thumb{width:80px;height:100px;border-radius:10px;object-fit:cover;background:#eee;display:grid;place-items:center;font-size:28px}
-.book-row h3{margin:0 0 6px}.book-row p{margin:3px 0;color:#777}
-.msg{padding:12px;border-radius:10px;margin-bottom:15px;display:none}.ok{background:#e7fff0;color:#087a35}.error{background:#ffe8e8;color:#a00000}
-@media(max-width:700px){.grid2{grid-template-columns:1fr}.full{grid-column:auto}.book-row{grid-template-columns:60px 1fr}.book-row .row-actions{grid-column:1/-1}.thumb{width:60px;height:80px}}
+
+body{
+  background:#f6f7fb;
+}
+
+.admin-wrap{
+  width:min(1100px,94%);
+  margin:30px auto;
+}
+
+.admin-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+
+.panel{
+  background:#fff;
+  border-radius:20px;
+  padding:22px;
+  box-shadow:0 10px 35px rgba(0,0,0,.08);
+  margin-bottom:20px;
+}
+
+.grid2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+}
+
+.field label{
+  display:block;
+  font-weight:700;
+  margin-bottom:7px;
+}
+
+.field input,
+.field textarea{
+  width:100%;
+  box-sizing:border-box;
+  padding:12px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  font:inherit;
+}
+
+.field textarea{
+  min-height:100px;
+}
+
+.full{
+  grid-column:1/-1;
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:18px;
+}
+
+.primary,
+.danger,
+.logout{
+  border:0;
+  border-radius:10px;
+  padding:12px 18px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.primary{
+  background:#222;
+  color:#fff;
+}
+
+.danger{
+  background:#ffe4e4;
+  color:#a00000;
+}
+
+.logout{
+  background:#222;
+  color:#fff;
+}
+
+.book-row{
+  display:grid;
+  grid-template-columns:80px 1fr auto;
+  gap:15px;
+  align-items:center;
+  border-top:1px solid #eee;
+  padding:14px 0;
+}
+
+.thumb{
+  width:80px;
+  height:100px;
+  border-radius:10px;
+  object-fit:cover;
+  background:#eee;
+  display:grid;
+  place-items:center;
+  font-size:28px;
+}
+
+.book-row h3{
+  margin:0 0 6px;
+}
+
+.book-row p{
+  margin:3px 0;
+  color:#777;
+}
+
+.msg{
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:15px;
+  display:none;
+}
+
+.ok{
+  background:#e7fff0;
+  color:#087a35;
+}
+
+.error{
+  background:#ffe8e8;
+  color:#a00000;
+}
+
+
+/* =========================
+   آمار بازدید
+========================= */
+
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:15px;
+  margin:20px 0;
+}
+
+.stat-card{
+  background:#f7f7f5;
+  border:1px solid #ddd;
+  border-radius:16px;
+  padding:22px;
+  text-align:center;
+}
+
+.stat-card span{
+  display:block;
+  font-size:28px;
+  margin-bottom:8px;
+}
+
+.stat-card strong{
+  display:block;
+  font-size:32px;
+  color:#222;
+}
+
+.stat-card small{
+  display:block;
+  color:#777;
+  margin-top:5px;
+}
+
+.views-box{
+  background:#f7f7f5;
+  border:1px solid #ddd;
+  border-radius:15px;
+  padding:18px;
+}
+
+.views-box h3{
+  margin-top:0;
+}
+
+.view-row{
+  display:grid;
+  grid-template-columns:40px 1fr auto;
+  gap:10px;
+  align-items:center;
+  padding:13px 5px;
+  border-bottom:1px solid #ddd;
+}
+
+.view-row:last-child{
+  border-bottom:0;
+}
+
+@media(max-width:700px){
+
+  .grid2{
+    grid-template-columns:1fr;
+  }
+
+  .full{
+    grid-column:auto;
+  }
+
+  .book-row{
+    grid-template-columns:60px 1fr;
+  }
+
+  .book-row .row-actions{
+    grid-column:1/-1;
+  }
+
+  .thumb{
+    width:60px;
+    height:80px;
+  }
+
+  .stats-grid{
+    grid-template-columns:1fr;
+  }
+
+}
+
 </style>
 </head>
+
 <body>
+
 <div class="admin-wrap">
-<div class="admin-head">
-<div><h1>⚙️ پنل مدیریت کتابخانه</h1><p id="adminEmail">در حال بررسی حساب...</p></div>
-<div class="actions"><a class="primary" style="text-decoration:none" href="index.html">مشاهده سایت</a><button class="logout" id="logoutBtn">خروج</button></div>
+
+  <div class="admin-head">
+
+    <div>
+      <h1>⚙️ پنل مدیریت کتابخانه</h1>
+      <p id="adminEmail">در حال بررسی حساب...</p>
+    </div>
+
+    <div class="actions">
+      <a
+        class="primary"
+        style="text-decoration:none"
+        href="index.html"
+      >
+        مشاهده سایت
+      </a>
+
+      <button class="logout" id="logoutBtn">
+        خروج
+      </button>
+    </div>
+
+  </div>
+
+
+  <div id="msg" class="msg"></div>
+
+
+  <!-- افزودن / ویرایش کتاب -->
+
+  <section class="panel">
+
+    <h2 id="formTitle">
+      ➕ افزودن کتاب
+    </h2>
+
+    <form id="bookForm">
+
+      <input
+        type="hidden"
+        id="bookId"
+      >
+
+      <div class="grid2">
+
+        <div class="field">
+          <label for="title">
+            عنوان کتاب *
+          </label>
+
+          <input
+            id="title"
+            required
+          >
+        </div>
+
+
+        <div class="field">
+          <label for="author">
+            نویسنده
+          </label>
+
+          <input id="author">
+        </div>
+
+
+        <div class="field">
+          <label for="category">
+            دسته‌بندی
+          </label>
+
+          <input
+            id="category"
+            placeholder="مثلاً رمان"
+          >
+        </div>
+
+
+        <div class="field">
+          <label for="rating">
+            امتیاز
+          </label>
+
+          <input
+            id="rating"
+            type="number"
+            min="0"
+            max="5"
+            step="0.1"
+            placeholder="4.8"
+          >
+        </div>
+
+
+        <div class="field full">
+          <label for="description">
+            توضیحات
+          </label>
+
+          <textarea id="description"></textarea>
+        </div>
+
+
+        <div class="field">
+          <label for="cover">
+            جلد کتاب
+          </label>
+
+          <input
+            id="cover"
+            type="file"
+            accept="image/*"
+          >
+        </div>
+
+
+        <div class="field">
+          <label for="pdf">
+            فایل PDF
+          </label>
+
+          <input
+            id="pdf"
+            type="file"
+            accept="application/pdf"
+          >
+        </div>
+
+      </div>
+
+
+      <div class="actions">
+
+        <button
+          class="primary"
+          type="submit"
+          id="saveBtn"
+        >
+          ذخیره کتاب
+        </button>
+
+        <button
+          class="danger"
+          type="button"
+          id="cancelEdit"
+          style="display:none"
+        >
+          لغو ویرایش
+        </button>
+
+      </div>
+
+    </form>
+
+  </section>
+
+
+  <!-- آمار بازدید -->
+
+  <section class="panel">
+
+    <h2>
+      📊 آمار بازدید سایت
+    </h2>
+
+    <div class="stats-grid">
+
+      <div class="stat-card">
+
+        <span>👥</span>
+
+        <strong id="todayViews">
+          0
+        </strong>
+
+        <small>
+          بازدید امروز
+        </small>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <span>📈</span>
+
+        <strong id="totalViews">
+          0
+        </strong>
+
+        <small>
+          کل بازدیدها
+        </small>
+
+      </div>
+
+    </div>
+
+
+    <div class="views-box">
+
+      <h3>
+        🔥 پربازدیدترین کتاب‌های امروز
+      </h3>
+
+      <div id="popularViews">
+        در حال بارگذاری...
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- لیست کتاب‌ها -->
+
+  <section class="panel">
+
+    <h2>
+      📚 کتاب‌های موجود
+    </h2>
+
+    <div id="booksList">
+      در حال بارگذاری...
+    </div>
+
+  </section>
+
 </div>
-<div id="msg" class="msg"></div>
-<section class="panel">
-<h2 id="formTitle">➕ افزودن کتاب</h2>
-<form id="bookForm">
-<input type="hidden" id="bookId">
-<div class="grid2">
-<div class="field"><label for="title">عنوان کتاب *</label><input id="title" required></div>
-<div class="field"><label for="author">نویسنده</label><input id="author"></div>
-<div class="field"><label for="category">دسته‌بندی</label><input id="category" placeholder="مثلاً رمان"></div>
-<div class="field"><label for="rating">امتیاز</label><input id="rating" type="number" min="0" max="5" step="0.1" placeholder="4.8"></div>
-<div class="field full"><label for="description">توضیحات</label><textarea id="description"></textarea></div>
-<div class="field"><label for="cover">جلد کتاب</label><input id="cover" type="file" accept="image/*"></div>
-<div class="field"><label for="pdf">فایل PDF</label><input id="pdf" type="file" accept="application/pdf"></div>
-</div>
-<div class="actions"><button class="primary" type="submit" id="saveBtn">ذخیره کتاب</button><button class="danger" type="button" id="cancelEdit" style="display:none">لغو ویرایش</button></div>
-</form>
-</section>
-<section class="panel"><h2>📚 کتاب‌های موجود</h2><div id="booksList">در حال بارگذاری...</div></section>
-</div>
+
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="admin.js"></script>
+
+<script src="admin.js?v=2"></script>
+
 </body>
 </html>
