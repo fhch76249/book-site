@@ -13,10 +13,7 @@ const content =
   document.getElementById("content");
 
 
-/* جلوگیری از خراب شدن HTML */
-
 function esc(value) {
-
   return String(value ?? "").replace(
     /[&<>"']/g,
     char => ({
@@ -27,42 +24,63 @@ function esc(value) {
       "'": "&#039;"
     }[char])
   );
-
 }
 
-
-/* دریافت شناسه کتاب از آدرس */
 
 const params =
   new URLSearchParams(location.search);
 
-const bookId = params.get("id");
+const bookId =
+  params.get("id");
 
 
-/* اگر شناسه وجود نداشت */
+/* ثبت بازدید */
 
-if (!bookId) {
+async function recordView() {
 
-  content.innerHTML = `
-    <div class="panel">
-      <h2>کتاب پیدا نشد</h2>
-      <p>
-        شناسه کتاب در آدرس وجود ندارد.
-      </p>
-      <a class="read-button" href="index.html">
-        بازگشت به کتابخانه
-      </a>
-    </div>
-  `;
+  if (!bookId) return;
 
+  const { error } = await db
+    .from("page_views")
+    .insert({
+      book_id: bookId,
+      page: "book"
+    });
+
+  if (error) {
+    console.log("View error:", error);
+  }
 }
 
 
-/* دریافت اطلاعات کتاب */
+/* دریافت کتاب */
 
 async function loadBook() {
 
-  if (!bookId) return;
+  if (!bookId) {
+
+    content.innerHTML = `
+      <div class="panel">
+
+        <h2>کتاب پیدا نشد</h2>
+
+        <p>
+          شناسه کتاب در آدرس وجود ندارد.
+        </p>
+
+        <a
+          class="read-button"
+          href="index.html"
+        >
+          بازگشت به کتابخانه
+        </a>
+
+      </div>
+    `;
+
+    return;
+  }
+
 
   const {
     data: book,
@@ -74,14 +92,11 @@ async function loadBook() {
     .single();
 
 
-  /* خطا */
-
   if (error || !book) {
-
-    console.error(error);
 
     content.innerHTML = `
       <div class="panel">
+
         <h2>کتاب پیدا نشد</h2>
 
         <p>
@@ -99,24 +114,17 @@ async function loadBook() {
     `;
 
     return;
-
   }
 
-
-  /* عنوان صفحه */
 
   document.title =
     `${book.title || "کتاب"} | کتابخانه`;
 
 
-  /* جلد */
-
   const cover =
     book.cover_url ||
     "https://via.placeholder.com/500x750?text=Book";
 
-
-  /* امتیاز */
 
   const rating =
     book.rating != null
@@ -124,22 +132,17 @@ async function loadBook() {
       : "بدون امتیاز";
 
 
-  /* دسته بندی */
-
   const category =
     book.category || "عمومی";
 
-
-  /* توضیحات */
 
   const description =
     book.description ||
     "توضیحی برای این کتاب ثبت نشده است.";
 
 
-  /* دکمه مطالعه */
-
   let readButton = "";
+
 
   if (book.pdf_url) {
 
@@ -165,12 +168,9 @@ async function loadBook() {
   }
 
 
-  /* نمایش صفحه */
-
   content.innerHTML = `
 
     <section class="book-detail">
-
 
       <div>
 
@@ -182,25 +182,20 @@ async function loadBook() {
 
       </div>
 
-
       <div class="book-info">
-
 
         <span class="book-category">
           ${esc(category)}
         </span>
 
-
         <h1>
           ${esc(book.title)}
         </h1>
-
 
         <div class="book-author">
           ✍️ نویسنده:
           ${esc(book.author || "نامشخص")}
         </div>
-
 
         <div class="book-meta">
 
@@ -218,16 +213,11 @@ async function loadBook() {
 
         </div>
 
-
         <div class="book-description">
-
           ${esc(description)}
-
         </div>
 
-
         ${readButton}
-
 
       </div>
 
@@ -247,9 +237,7 @@ const darkMode =
 if (
   localStorage.getItem("darkMode") === "1"
 ) {
-
   document.body.classList.add("dark");
-
 }
 
 
@@ -274,6 +262,8 @@ if (darkMode) {
 }
 
 
-/* شروع */
+/* اجرا */
+
+recordView();
 
 loadBook();
