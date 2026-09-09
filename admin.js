@@ -32,7 +32,7 @@ async function uploadFile(file,bucket){
 async function loadAdminBooks(){
  const l=$("booksList");const {data,error}=await db.from("books").select("*").order("created_at",{ascending:false});
  if(error){l.textContent="خطا: "+error.message;return}
- const rows=(data||[]).filter(b=>String(b.category||"").trim()!=="عاشقانه");
+ const rows=data||[];
  l.innerHTML=rows.map(b=>`<div class="book-row"><img class="thumb" src="${esc(b.cover_url||"")}" alt=""><div><h3>${esc(b.title)}</h3><p>نویسنده: ${esc(b.author||"نامشخص")}</p><p>دسته: ${esc(b.category||"بدون دسته")}</p></div><div class="row-actions"><button class="primary" onclick="startEdit('${b.id}')">ویرایش</button><button class="danger" onclick="deleteBook('${b.id}')">حذف</button></div></div>`).join("")||"<p>هنوز کتابی اضافه نشده است.</p>";
 }
 async function startEdit(id){
